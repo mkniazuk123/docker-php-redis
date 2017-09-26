@@ -13,10 +13,21 @@ RUN pecl install igbinary-$IGBINARY_VERSION \
     && php -m | grep igbinary
 
 # Install redis driver
-RUN pecl install redis-$REDIS_VERSION \
+RUN mkdir -p /tmp/pear \
+    && cd /tmp/pear \
+    && pecl bundle redis-$REDIS_VERSION \
+    && cd redis \
+    && phpize . \
+    && ./configure --enable-redis-igbinary \
+    && make \
+    && make install \
+    && cd ~ \
     && rm -rf /tmp/pear \
     && docker-php-ext-enable redis \
     && php -m | grep redis
+
+# Check if redis see igbinary
+RUN php -r 'echo Redis::SERIALIZER_IGBINARY;'
 
 # Install composer
 WORKDIR /tmp
